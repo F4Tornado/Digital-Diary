@@ -16,7 +16,7 @@ def write(start, key, data):
 
     toWrite = [str(start)]
     for i in range(len(data)):
-        ki = (i%(len(str(key))/3))*3
+        ki = (i%(len(str(key))//3))*3
         if (ord(data[i])+int(str(key)[ki:ki+3])>999):
             print("Invalid key")
             f.close()
@@ -36,11 +36,17 @@ try:
     # write(12345678, 123456, '[{"date":"1/1/1", "entry":"Test"}]')
     print("Press Control+C at any time to cancel")
     dataFile = open("data.txt", "r+")
-    key = int(raw_input("Key: "))
+    if dataFile.read() == "":
+        write(12345678, 123456, json.dumps([]))
+    dataFile.close()
+    dataFile = open("data.txt", "r+")
+
+    key = int(input("Key: "))
     dataRead = dataFile.read()
-    a = int(dataRead.rstrip()[:8], 10)
-    b = dataRead.rstrip()[-8:]
-    c = str(a*key-key)[:8]
+
+    a = int(dataRead.rstrip()[0:8], 10)
+    b = dataRead.rstrip()[-8:len(dataRead)]
+    c = str(a*key-key)[0:8]
 
     if b == c:
         encodedData = dataRead[8: len(dataRead)-8]
@@ -48,29 +54,29 @@ try:
         splitKey = []
         decoded = []
 
-        for i in range(len(encodedData)/3):
+        for i in range(len(encodedData)//3):
             encodedNumbers.append(int(encodedData[i*3:i*3+3]))
 
         for i in range(len(encodedNumbers)):
-            ki = (i%(len(str(key))/3))*3
+            ki = (i%(len(str(key))//3))*3
             decoded.append(chr(encodedNumbers[i]-int(str(key)[ki:ki+3])))
 
         decoded = "".join(decoded)
         decoded = json.loads(decoded)
 
         if "enter" in sys.argv or 'write' in sys.argv:
-            date = raw_input("Todays Date: ")
-            entry = raw_input("Entry: ")
+            date = input("Todays Date: ")
+            entry = input("Entry: ")
             decoded.append({"date": date, "entry": entry})
 
         elif "read" in sys.argv or "find" in sys.argv:
-            date = raw_input("Entry Date: ")
+            date = input("Entry Date: ")
             for i in decoded:
                 if i["date"] == date:
                     print(i["date"]+" | "+i["entry"])
 
         elif "reset" in sys.argv or "delete" in sys.argv:
-            y = raw_input("Are you sure? You wont be able to get it back y/n: ")
+            y = input("Are you sure? You wont be able to get it back y/n: ")
             if y == "y":
                 decoded = []
 
@@ -87,6 +93,7 @@ try:
 
         nk = int(str(random.randint(100, 700))+str(random.randint(100, 700))+str(random.randint(100, 700))+str(random.randint(100, 700)))
         write(random.randint(10000000, 99999999), nk, json.dumps(decoded))
+        print("")
         print("Your new key is "+str(nk)+". Keep it somewhere safe so you can recover your stuff")
     else:
         print("Incorrect key")
